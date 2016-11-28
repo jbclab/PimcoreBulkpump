@@ -10,6 +10,7 @@ class CsvDataMapper_Import extends CsvDataMapper_Abstract_Import
 
     public static function init($config)
     {
+
         // disable versioning
         \Pimcore\Model\Version::disable();
         $import = new self();

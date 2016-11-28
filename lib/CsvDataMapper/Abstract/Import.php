@@ -111,6 +111,9 @@ abstract class CsvDataMapper_Abstract_Import implements CsvDataMapper_Interface_
         /** Here we start reading the config of the importer */
         /** @var CsvDataMapper_Abstract_Data_Mapper $dataMapper */
         $dataMapper = $this->_initDataMapper($config);
+        //var_dump($dataMapper);
+
+        /*
         foreach ($dataMapper->getObjects() as $dataObject) {
             $dataMapper->setContextObject($dataObject);
             switch ($importType) {
@@ -120,6 +123,20 @@ abstract class CsvDataMapper_Abstract_Import implements CsvDataMapper_Interface_
                     break;
                 case self::IMPORT_TYPE_ATTRIBUTES :
                     self::importAttributes();
+                    break;
+            }
+        }*/
+        $importer = $this->importCustomClass();
+
+        foreach ($dataMapper->getObjects() as $dataObject)
+        {
+            $this->importObject();
+
+            $dataMapper->setContextObject($dataObject);
+            switch($importType) {
+                case self::IMPORT_TYPE_CUSTOM_CLASS:
+                    //var_dump($this->getDataMapper()->getContextObject());
+                    $importer->import($dataObject, (array)$this->getDataMapper()->getContextObject());
                     break;
             }
         }
@@ -170,7 +187,7 @@ abstract class CsvDataMapper_Abstract_Import implements CsvDataMapper_Interface_
      * @param $object
      * @throws Exception
      */
-    protected function importCustomClass(&$object) {
+    protected function importCustomClass() {
         $class = $this->checkConfigField('customClass');
 
         if (class_exists($class) === false) {
@@ -182,7 +199,7 @@ abstract class CsvDataMapper_Abstract_Import implements CsvDataMapper_Interface_
             throw new Exception('Importer class has to implement "\BulkPump\CustomImportInterface"!');
         }
 
-        $importer->import($object, (array)$this->getDataMapper()->getContextObject(), $this);
+        return $importer;
     }
     /**
      * Import classification attributes
