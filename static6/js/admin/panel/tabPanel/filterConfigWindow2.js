@@ -1,4 +1,23 @@
 pimcore.registerNS('pimcore.plugin.CsvImport.admin.filterConfigWindow2');
+Ext.define('FilterChain', {
+    extend: 'Ext.data.Model',
+    fields: [
+        {name: 'id', type: 'int', persist: false},
+        'sort_order',
+        'class',
+        'name',
+        'description'
+    ],
+
+});
+Ext.define('Filters', {
+    extend: 'Ext.data.Model',
+    fields: [
+        'class',
+        'name',
+        'description'
+    ],
+});
 pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
 
     filterGrid: null,
@@ -9,7 +28,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
     colsFilterChain: null,
 
     getFilterGridStore: function () {
-        return new Ext.data.JsonStore({
+       /* return new Ext.data.JsonStore({
             autoLoad: true,
             restful: true,
             root: 'fields',
@@ -20,12 +39,30 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
             ],
 
             proxy: new Ext.data.HttpProxy({
-                url: '/BulkPump/filters'
+                url: '/PimcoreBulkpump/filters'
             })
+        });*/
+        return Ext.create('Ext.data.Store',{
+            autoLoad: true,
+            autoSync: true,
+            model: 'Filters',
+            proxy: {
+                type: 'rest',
+                url: '/PimcoreBulkpump/filters',
+                reader: {
+                    type: 'json',
+                    rootProperty: 'fields',
+
+                }
+            },
+            listeners: {
+
+            }
         });
     },
 
     getFilterChainGridStore: function (config_id) {
+        /*
         return new Ext.data.JsonStore({
             autoLoad: true,
             autoSave: true,
@@ -46,7 +83,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
             }),
 
             proxy: new Ext.data.HttpProxy({
-                url: '/BulkPump/filterchain'
+                url: '/PimcoreBulkpump/filterchain'
             }),
 
             baseParams: {
@@ -58,6 +95,42 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
                 successProperty: 'success',
                 messageProperty: 'message'
             })
+        });*/
+        return Ext.create('Ext.data.Store',{
+            autoLoad: true,
+            autoSync: true,
+            model: 'FilterChain',
+            proxy: {
+                type: 'rest',
+                url: '/PimcoreBulkpump/filterchain',
+                reader: {
+                    type: 'json',
+                    rootProperty: 'fields',
+                    idProperty: 'id',
+                },
+                writer: {
+                    type: 'json',
+                    rootProperty: 'fields',
+                    idProperty: 'id',
+                }
+            },
+            listeners: {
+                beforeload: function(store){
+                    store.getProxy().setExtraParam("configId", config_id);
+                },
+                write: function(store, operation){
+                    var record = operation.getRecords()[0],
+                        name = Ext.String.capitalize(operation.action),
+                        verb;
+
+                    if (name == 'Destroy'){
+                        verb = 'Destroyed';
+                    }else{
+                        verb = name + 'd';
+                    }
+                    // Ext.example.msg(name, Ext.String.format("{0} user: {1}", verb,record.getId()));
+                }
+            }
         });
     },
 
@@ -102,7 +175,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
                 hidden: false,
                 items: [
                     {
-                        icon: '/plugins/BulkPump/static/img/arrow_up.png',
+                        icon: '/plugins/PimcoreBulkpump/static/img/arrow_up.png',
                         tooltip: 'Move up',
                         handler: function (grid, rowIndex) {
                             if(rowIndex > 0)
@@ -123,7 +196,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
                             }
                         }.bind(this)
                     }, {
-                        icon: '/plugins/BulkPump/static/img/arrow_down.png',
+                        icon: '/plugins/PimcoreBulkpump/static/img/arrow_down.png',
                         tooltip: 'Move down',
                         handler: function (grid, rowIndex) {
                             if(rowIndex < (grid.store.getCount() - 1))
@@ -152,7 +225,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
         this.filterChainGridStore = this.getFilterChainGridStore(config_id);
 
         // declare the source Grid
-        this.filterGrid = new Ext.grid.GridPanel({
+        /*this.filterGrid = new Ext.grid.GridPanel({
             flex             : 2,
             ddGroup          : 'filterChainGridDDGroup',
             store            : this.filterGridStore,
@@ -160,8 +233,10 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
             enableDragDrop   : true,
             stripeRows       : true,
             title            : 'Available filters',
-            selModel         : new Ext.grid.RowSelectionModel({singleSelect:true}),
-
+            //selModel         : new Ext.grid.RowSelectionModel({singleSelect:true}),
+            selModel         : Ext.create('Ext.grid.Panel', {
+                selType : 'rowmodel', //can be cellmodel too
+                 }),
             listeners: {
                 'rowdblclick': function (grid, rowIndex) {
                     var row = grid.getStore().getAt(rowIndex);
@@ -175,13 +250,44 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
                     newRecord.set('description', row.get('description'));
 
                     this.filterChainGrid.store.add(newRecord);
+                    }.bind(this)
+            }
+        });*/
+
+        this.filterGrid = Ext.create('Ext.grid.Panel',{
+            flex             : 2,
+            ddGroup          : 'filterChainGridDDGroup',
+            store            : this.filterGridStore,
+            columns          : colsFilter,
+            enableDragDrop   : true,
+            stripeRows       : true,
+            title            : 'Available filters',
+            //selModel         : new Ext.grid.RowSelectionModel({singleSelect:true}),
+            sm         : Ext.create('Ext.grid.Panel', {
+                selType : 'rowmodel', //can be cellmodel too
+            }),
+            listeners: {
+                'rowdblclick': function (grid, rowIndex,columnIndex, e) {
+                    var row = grid.getStore().getAt(e);
+                    var sortOrder = this.filterChainGrid.store.getCount();
+                    var newRecord = new FilterChain();
+                    //console.log(rowIndex);
+                    //console.log(row);
+                    //console.log(e);
+                    newRecord.set('sort_order', ++sortOrder);
+                    newRecord.set('id', Ext.id());
+                    newRecord.set('class', row.get('class'));
+                    newRecord.set('name', row.get('name'));
+                    newRecord.set('description', row.get('description'));
+
+                    this.filterChainGrid.store.add(newRecord);
                 }.bind(this)
             }
         });
 
 
         // create the destination Grid
-        this.filterChainGrid = new Ext.grid.GridPanel({
+        this.filterChainGrid = Ext.create('Ext.grid.Panel',{
             flex             : 3,
             ddGroup          : 'filterGridDDGroup',
             store            : this.filterChainGridStore,
@@ -200,12 +306,12 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
             }
         });
 
-        this.filterParamPanel = new Ext.Panel({
+        this.filterParamPanel = Ext.create('Ext.panel.Panel',{
             flex: 2,
             title: 'Parameters'
         });
 
-        var bgpanel = new Ext.Panel({
+        var bgpanel = Ext.create('Ext.panel.Panel',{
             id           : 'backgroundPanel',
             layout: {
                 type: 'hbox',
@@ -242,7 +348,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
             bbar: [],
             buttons: [
                 {
-                    icon: '/plugins/BulkPump/static/img/close.png',
+                    icon: '/plugins/PimcoreBulkpump/static/img/close.png',
                     text: 'Close',
                     handler: function () {
                         popup.close();
@@ -252,7 +358,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
         }).show();
 
         // used to add records to the destination stores
-        this.initDragAndDrop();
+       // this.initDragAndDrop();
         return popup;
     },
 
@@ -271,6 +377,7 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
                 return true;
             }.bind(this)
         });
+
 
         // add items
         var filterChainGridDropTargetEl = this.filterChainGrid.getView().scroller.dom;
@@ -303,13 +410,3 @@ pimcore.plugin.CsvImport.admin.filterConfigWindow2 = Class.create({
 
 var filterWindow2 = new pimcore.plugin.CsvImport.admin.filterConfigWindow2();
 
-
-// create a Record constructor for the drop fields
-var fields = [
-    { name: 'sort_order'     , mapping : 'sort_order' },
-    { name: 'id'             , mapping : 'id' },
-    { name: 'class'          , mapping : 'class' },
-    { name: 'name'           , mapping : 'name' },
-    { name: 'description'    , mapping : 'description' }
-];
-DropRecord = Ext.data.Record.create(fields);

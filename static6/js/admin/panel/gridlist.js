@@ -13,14 +13,18 @@ pimcore.plugin.CsvImport.admin.panel.gridlist = Class.create({
             items: [
                 {
                     text: t('add_new_profile'),
-                    iconCls: 'pimcore_icon_publish_medium',
-                    scale: "medium",
+                    //iconCls: 'pimcore_icon_publish_medium',
+                    scale: "small",
                     handler: this.onAdd.bind(this)
                 }, {
                     text: t('remove_profile'),
-                    iconCls: 'pimcore_icon_delete_medium',
-                    scale: "medium",
+                    //iconCls: 'pimcore_icon_delete_medium',
+                    scale: "small",
                     handler: this.onDelete.bind(this)
+                }, {
+                    text: t('import_profile'),
+                    scale: "small",
+                    handler: this.onRun.bind(this)
                 }
             ]
         })
@@ -29,7 +33,10 @@ pimcore.plugin.CsvImport.admin.panel.gridlist = Class.create({
 
         var pageSize = 30;
 
+       // var store = profiles.getProfileStore();
         var store = profiles.getProfileStore();
+
+        /*
 
         gridlist.profileGrid = new Ext.grid.GridPanel({
             id: 'importer_grid_profiles',
@@ -49,7 +56,7 @@ pimcore.plugin.CsvImport.admin.panel.gridlist = Class.create({
                     }
                 }
             },
-            sm: new Ext.grid.RowSelectionModel({singleSelect: true}),
+            sm: new Ext.selection.RowModel({singleSelect: true}),
             stripeRows: true,
             //width: 329,
             region: 'west',
@@ -66,7 +73,29 @@ pimcore.plugin.CsvImport.admin.panel.gridlist = Class.create({
             })
         });
         //gridlist.profileGrid.getSelectionModel().on('rowclick', this.onCellClick.bind(this));
-        gridlist.profileGrid.getStore().reload();
+        gridlist.profileGrid.getStore().reload();*/
+        gridlist.profileGrid = Ext.create('Ext.grid.Panel', {
+            bufferedRenderer: false,
+            id: 'importer_grid_profiles',
+            store: store,
+            columns: gridlist.getColumns(profiles.profileGrid),
+            forceFit: true,
+            height:210,
+            split: true,
+            region: 'west',
+            listeners: {
+                rowclick: function(searchgrid, rowIndex, e) {
+                   // var rec = grid.getStore().getAt(rowIndex);
+                    tabPanel.openTab(rowIndex.id);
+                }
+
+            },
+            tbar: [
+                gridlist.getTopToolbar()
+            ],
+
+        });
+
         return gridlist.profileGrid;
     },
     getColumns: function (self) {
@@ -135,19 +164,27 @@ pimcore.plugin.CsvImport.admin.panel.gridlist = Class.create({
     },
     onAdd: function (btn, ev) {
         var profileGrid = Ext.getCmp('importer_grid_profiles');
-        var profileStore = profileGrid.getStore();
+        var profileStore = profileGrid.store;
+
+        var model = new Profile({
+            profile_name: null,
+            attribute_language_separator: '_'});
+
+        profileStore.add(model);
+        //profileStore.sync();
+        /*
         var newProfile = profileStore.recordType;
         var profile = new newProfile({
                 profile_name: null,
                 attribute_language_separator: '_'
             });
         profileGrid.stopEditing();
-        profileStore.insert(profileStore.getCount(), profile);
+        profileStore.insert(profileStore.getCount(), profile);*/
     },
     onDelete: function (btn, ev) {
         var profileGrid = Ext.getCmp('importer_grid_profiles'),
             profileStore = profileGrid.getStore(),
-            selectedItem = profileGrid.getSelectionModel().getSelected();
+            selectedItem = profileGrid.getView().getSelectionModel().getSelection()[0];
         if (selectedItem == undefined) {
             Ext.MessageBox.alert(t('error'), t('please_select_a_profile_to_delete'));
             return;
@@ -155,12 +192,23 @@ pimcore.plugin.CsvImport.admin.panel.gridlist = Class.create({
         Ext.MessageBox.confirm(t('confirm'), t('are_you_sure_you_want_to_delete_this_profile'), function (value) {
             if (value == 'yes') {
                 profileStore.remove(selectedItem);
+
                 var tabComponent = Ext.getCmp("csv_importer_profile_config_tabs");
-                /** @var {Ext.Panel} configPanel */
-                var configPanel = tabComponent.getItem('csv_import_config_panel_' + selectedItem.id);
-                if (configPanel) {
-                    configPanel.destroy();
-                }
+
+            }
+        });
+    },
+    onRun:function(){
+        var profileGrid = Ext.getCmp('importer_grid_profiles'),
+            profileStore = profileGrid.getStore(),
+            selectedItem = profileGrid.getView().getSelectionModel().getSelection()[0];
+        if (selectedItem == undefined) {
+            Ext.MessageBox.alert(t('error'), t('please_select_a_profile_to_run'));
+            return;
+        }
+        Ext.MessageBox.confirm(t('confirm'), t('are_you_sure_you_want_to_run_this_profile'), function (value) {
+            if (value == 'yes') {
+                logClass.triggerImport(selectedItem.id);
             }
         });
     }

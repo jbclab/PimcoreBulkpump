@@ -6,44 +6,24 @@ pimcore.plugin.CsvImport = Class.create(pimcore.plugin.admin, {
 
     initialize: function () {
         pimcore.plugin.broker.registerPlugin(this);
-
-        //Create a variable to prevent scope problems
-        var plugin = this;
-
-        this.checkRight(
-            'plugin_pimcorebulkpump_user',
-            function() {
-
-                //When the user has the right permission then add menu item in left menu
-                plugin.navEl = Ext.get('pimcore_menu_product_importer');
-                if (!plugin.navEl) {
-                    plugin.navEl = Ext.get('pimcore_menu_search').insertSibling('<li id="pimcore_menu_product_importer" class="pimcore_menu_item pimcore_icon-book">' + t('product_importer') + '</li>');
-                }
-            }
-        );
     },
 
 
-    /**
-     * Opening the tab in main panel
-     */
     activateThePanel: function () {
-        mainPanel.getPanel();
-        pimcore.globalmanager.add("CsvImport.admin", mainPanel);
-
-        var panel = pimcore.globalmanager.get('CsvImport.admin');
+        var panel = null;
+        try {
+            panel = pimcore.globalmanager.get('CsvImport.admin');
+            panel.activate();
+        }
+        catch (e) {
+            pimcore.globalmanager.add("CsvImport.admin", mainPanel);
+            mainPanel.getPanel();
+        }
     },
 
-    /**
-     * Recieve and check if user has the correct permissions
-     *
-     * @param permission
-     * @param success
-     * @param error
-     */
     checkRight : function(permission, success, error) {
         Ext.Ajax.request({
-            url : "/plugin/PimcoreBulkpump/user/permission",
+            url : "/plugin/PimcoreBulkpump/user/permission", ///plugin/PimcoreBulkpump/user/permission
             params : { permission : permission },
             success : function (result) {
                 var res = Ext.decode(result.responseText);
@@ -51,23 +31,17 @@ pimcore.plugin.CsvImport = Class.create(pimcore.plugin.admin, {
                     success();
                 }
                 else {
-                    if(typeof error != 'undefined') {
-                        error();
-                    }
+                    error();
                 }
             }.bind(this),
             error : function () { alert('error checking permissions') }
         });
     },
 
-    /**
-     * Method to open the importer panel
-     */
     productImporter: function () {
-        this.checkRight(
-            'plugin_pimcorebulkpump_user',
+       this.checkRight(
+            'plugin_bulkpump_user',
             function() {
-                //Activate the panel
                 this.activateThePanel();
             }.bind(this),
             function() {
@@ -75,17 +49,28 @@ pimcore.plugin.CsvImport = Class.create(pimcore.plugin.admin, {
             }
         );
     },
+    pimcoreReady:    function (params, broker) {
+        var menuItems = [];
+        menuItems.push({
+            text:    t('csv_product_importer'),
+            iconCls: 'pimcore_icon_routes',
+            handler: this.productImporter.bind(this)
+        });
 
-    pimcoreReady: function (params, broker) {
+        this.navEl = Ext.get('pimcore_menu_product_importer');
+        if (!this.navEl) {
+            this.navEl = Ext.get('pimcore_menu_logout').insertSibling('<li id="pimcore_menu_product_importer" class="pimcore_menu_item icon-book">' + t('product_importer') + '</li>');
+        }
 
         var toolbar = pimcore.globalmanager.get('layout_toolbar');
+        var menu = new Ext.menu.Menu({
+            cls:   'pimcore_navigation_flyout',
+            items: [menuItems]
+        });
+        this.navEl.on('mousedown', toolbar.showSubMenu.bind(menu));
 
-        //When you didnt had the right's there is no element to bind to
-        if(typeof this.navEl != 'undefined') {
-
-            //Bind the navigation to the button, after the click to open the tab
-            this.navEl.on('mousedown', this.productImporter.bind(this));
-        }
+        /** Start the initialisation of the upload window */
+        uploadForm.getFileWindow().hide();
     }
 
 

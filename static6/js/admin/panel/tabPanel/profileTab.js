@@ -31,64 +31,38 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
             ]
         },
         getTopToolbar: function (id) {
-            return new Ext.Toolbar({
+            return Ext.create('Ext.toolbar.Toolbar',{
                 renderTo: document.body,
-                height: 35,
+                //height: 35,
                 items: [
                     {
                         text: t('save'),
                         id: 'btn_save_profile_' + id,
-                        iconCls: 'pimcore_icon_publish_medium',
-                        scale: 'medium',
+                        // iconCls: 'pimcore_icon_publish_medium',
+                        scale: 'small',
                         handler: function (button) {
                             var form = Ext.getCmp('csv_import_selected_form_' + id);
                             var values = form.getForm().getFieldValues();
-                            profiles.saveRecord(values, id, this.updateProfileCallback);
+                            profiles.saveRecord(values, id);
                         }.bind(this)
                     },
                     {
                         text: t('add_new_file'),
-                        iconCls: 'pimcore_icon_publish_medium',
-                        scale: 'medium',
+                        // iconCls: 'pimcore_icon_publish_medium',
+                        scale: 'small',
                         handler: function (self) {
+                            //console.log(id);
                             var window = Ext.getCmp('csv_import_file_upload_window');
+                            if(window == undefined){
+                                uploadForm.getFileWindow();
+                                var window = Ext.getCmp('csv_import_file_upload_window');
+                            }
                             window.profileId = id;
                             window.show();
                         }
                     }
                 ]
             })
-        },
-        updateProfileCallback: /**
-         * @param {Ext.data.Store} store
-         * @param {Ext.data.Record} record
-         * @param {String} operation  Ext.data.Record.EDIT || Ext.data.Record.REJECT || Ext.data.Record.COMMIT
-         */
-            function (store, record, operation) {
-            var button = Ext.getCmp('btn_save_profile_' + record.id);
-            button.disable();
-            var _configTabGrid = Ext.getCmp("csv_import_config_grid" + record.id);
-
-            var _configTabStore = _configTabGrid.getStore();
-            _configTabStore.fireEvent('datachanged', _configTabStore);
-            _configTabStore.reload({
-                callback: function (records, operation, success) {
-                    if (success) {
-                        // reload csv field selection box
-                        var comboBox = _configTabGrid.getColumnModel().getColumnById("csv_field");
-                        comboBox.getEditor().getStore().reload({
-                            callback: function () {
-                                button.findParentByType('panel').doLayout();
-                                _configTabGrid.doLayout();
-                                profileTab.checkEnabled(record.id);
-                                button.enable();
-                                pimcore.helpers.showNotification(t('save_notification_title'), t('save_notification'));
-                            }
-                        });
-                    }
-                }
-            });
-
         },
         /**
          *
@@ -115,7 +89,7 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
             });
         },
         getProfileForm: function (id) {
-
+            var define_field_width = 410;
             return new Ext.FormPanel({
                 id: "csv_import_selected_form_" + id,
                 bodyStyle: 'padding: 10px 10px 10px 10px;',
@@ -124,21 +98,21 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
                     {
                         xtype: 'fieldset',
                         title: t('selected file'),
-                        defaults: {width: 210},
+                        defaults: {width: define_field_width},
                         defaultType: 'textfield',
                         items: [
                             {
                                 id: "profile_name" + id,
                                 name: 'profile_name',
                                 fieldLabel: t('profile_name'),
-                                width: 210
+                                width: define_field_width
                             },
                             {
                                 id: "load_path_field" + id,
                                 name: 'load_path',
                                 readOnly: true,
                                 fieldLabel: t('load_path'),
-                                width: 210
+                                width: define_field_width
                             },
                             object.getObjectsCombo(id),
                             {
@@ -161,7 +135,7 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
                                 id: "import_type" + id,
                                 name: 'import_type',
                                 fieldLabel: t('import_type'),
-                                width: 210,
+                                width: define_field_width,
                                 listeners: {
                                     select: function (el) {
                                         var value = el.getValue();
@@ -176,13 +150,13 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
                         id: 'csv_import_settings_object_' + id,
                         hidden: true,
                         title: t('settings_for_import_type_object'),
-                        defaults: {width: 210},
+                        defaults: {width: define_field_width},
                         defaultType: 'textfield',
                         items: [
                             {
                                 name: 'save_to_path',
                                 fieldLabel: t('save_to_path'),
-                                width: 210,
+                                width: define_field_width,
                                 allowBlank: false,
                                 listeners: {}
                             },
@@ -200,31 +174,31 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
                         id: 'csv_import_settings_attributes_' + id,
                         hidden: true,
                         title: t('settings_for_import_type_attributes'),
-                        defaults: {width: 210},
+                        defaults: {width: define_field_width},
                         defaultType: 'textfield',
                         items: [
                             {
                                 name: 'attributes_start_after',
                                 fieldLabel: t('attributes_start_after_field'),
-                                width: 210,
+                                width: define_field_width,
                                 allowBlank: true
                             },
                             {
                                 name: 'classification_store_field',
                                 fieldLabel: t('classification_store_field'),
-                                width: 210,
+                                width: define_field_width,
                                 allowBlank: true
                             },
                             {
                                 name: 'classification_field',
                                 fieldLabel: t('classification_field'),
-                                width: 210,
+                                width: define_field_width,
                                 allowBlank: true
                             },
                             {
                                 name: 'attribute_language_separator',
                                 fieldLabel: t('language_separator'),
-                                width: 210,
+                                width: define_field_width,
                                 allowBlank: true
                             }
 
@@ -235,13 +209,13 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
                         id: 'csv_import_settings_custom_' + id,
                         hidden: true,
                         title: t('settings_for_import_type_custom'),
-                        defaults: {width: 210},
+                        defaults: {width: define_field_width},
                         defaultType: 'textfield',
                         items: [
                             {
                                 name: 'custom_class',
                                 fieldLabel: t('custom_class'),
-                                width: 210,
+                                width: define_field_width,
                                 allowBlank: false
                             },
                             {
@@ -261,7 +235,7 @@ pimcore.plugin.CsvImport.admin.profileTab = Class.create(
                             var rec = profileStore.getById(id);
                             newPanel.getForm().loadRecord(rec);
                             this.displaySettingsForImportType(id, rec.data.import_type);
-                            newPanel.doLayout();
+                            //newPanel.doLayout();
                         }.bind(this));
                         profileStore.load();
                     }.bind(this)

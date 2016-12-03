@@ -11,7 +11,7 @@ pimcore.plugin.CsvImport.admin.mainPanel = Class.create(
             var panel = new Ext.Panel({
                 id:       "csv_product_import_tab",
                 title:    t('csv_product_importer_mapper'),
-                iconCls:  'pimcore_icon_routes',
+                iconCls:  'pimcore_icon_importer',
                 layout:   'border',
                 closable: true,
                 items:    [
@@ -23,7 +23,7 @@ pimcore.plugin.CsvImport.admin.mainPanel = Class.create(
                         split:       true,
                         minSize:     150,
                         collapsible: true,
-                        width:       300,
+                        width:       390,
                         items:       [
                             gridlist.getGridList()
                         ]
@@ -43,7 +43,7 @@ pimcore.plugin.CsvImport.admin.mainPanel = Class.create(
 
             var pimcoreTabs = Ext.getCmp('pimcore_panel_tabs');
             pimcoreTabs.add(panel);
-            pimcoreTabs.activate('csv_product_import_tab');
+            pimcoreTabs.setActiveTab('csv_product_import_tab');
 
             panel.on('destroy', function () {
                 pimcore.globalmanager.remove('CsvImport.admin');

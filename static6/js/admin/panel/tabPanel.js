@@ -7,6 +7,7 @@ pimcore.plugin.CsvImport.admin.mainPanel.tabPanel = Class.create(
          * @returns {Ext.TabPanel}
          */
         getTabPanel: function () {
+            /*
             return new Ext.TabPanel({
                 id: 'csv_importer_profile_config_tabs',
                 autoTabs: true,
@@ -15,7 +16,19 @@ pimcore.plugin.CsvImport.admin.mainPanel.tabPanel = Class.create(
                 renderTo: document.body,
                 region: "center",
                 items: []
-            })
+            })*/
+
+            return Ext.create('Ext.tab.Panel', {
+                id: 'csv_importer_profile_config_tabs',
+                xtype: 'tabpanel',
+                renderTo: document.body,
+                region: "center",
+                autoTabs: true,
+                autoScroll: true,
+                layoutOnTabChange: true,
+                items: [
+                ]
+            });
         },
         /**
          *
@@ -24,15 +37,15 @@ pimcore.plugin.CsvImport.admin.mainPanel.tabPanel = Class.create(
         openTab: function (id) {
             var tabComponent = Ext.getCmp("csv_importer_profile_config_tabs");
 
-            var panelToActivate = tabComponent.getItem('csv_import_config_panel_' + id);
+            var panelToActivate = tabComponent.getComponent('csv_import_config_panel_' + id);
 
             if(panelToActivate === undefined){
                 var subPanel = tabPanel.getSubPanel(id);
                 tabComponent.add( subPanel);
-                tabComponent.activate(subPanel);
+                tabComponent.setActiveTab(subPanel);
 
             }else{
-                tabComponent.activate(panelToActivate);
+                tabComponent.setActiveTab(panelToActivate);
 
             }
         },
@@ -42,7 +55,7 @@ pimcore.plugin.CsvImport.admin.mainPanel.tabPanel = Class.create(
          * @returns {Ext.Panel}
          */
         getSubPanel: function (id) {
-
+            /*
             return new Ext.Panel({
                 id: "csv_import_config_panel_" + id,
                 title: t('configuration') + " id: " + id,
@@ -62,6 +75,29 @@ pimcore.plugin.CsvImport.admin.mainPanel.tabPanel = Class.create(
                         p.hide();
                     }
                 }
+            });*/
+            return Ext.create('Ext.tab.Panel',{
+                id: "csv_import_config_panel_" + id,
+                xtype: 'tabpanel',
+                title: t('configuration') + " id: " + id,
+                defaults: {
+                    bodyPadding: 10,
+                    autoScroll: true
+                },
+                border: false,
+                autoScroll: true,
+                layout: 'fit',
+                region: "center",
+                closable: true,
+                items: [
+                    profileTab.getPanel(id),
+                    configTab.getPanel(id)
+                ],
+                listeners: {
+                    close: function(p) {
+                        p.hide();
+                    }
+                }
             });
         },
         /**
@@ -71,6 +107,7 @@ pimcore.plugin.CsvImport.admin.mainPanel.tabPanel = Class.create(
          */
         getSubTabs: function (id)
         {
+            /*
             return new Ext.TabPanel({
                 margins: '0 0 0 0',
                 id: 'csv_importer_sub_tabs' + id,
@@ -95,7 +132,19 @@ pimcore.plugin.CsvImport.admin.mainPanel.tabPanel = Class.create(
                         profileTab.checkEnabled(id);
                     }
                }
-           });
+           });*/
+            return Ext.create('Ext.tab.Panel',{
+                id: 'csv_importer_sub_tabs' + id,
+                xtype: 'basic-tabs',
+                title: t('configuration') + " id: " + id,
+                defaults: {
+                    bodyPadding: 10,
+                    autoScroll: true
+                },
+                items: [
+                    profileTab.getPanel(id),
+                    configTab.getPanel(id)]
+            });
 
         },
         /**

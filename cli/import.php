@@ -11,7 +11,7 @@
  */
 $workingDirectory = getcwd();
 chdir(__DIR__);
-include_once("../../../pimcore/cli/startup.php");
+include_once("/data/projects/ibood-pimcore/pimcore/cli/startup.php");
 
 //execute in admin mode
 define("PIMCORE_ADMIN", true);
