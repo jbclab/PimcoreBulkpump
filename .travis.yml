@@ -11,3 +11,4 @@ before_script:
   - git clone https://github.com/pimcore/pimcore.git pimcore/pimcore
   - cd pimcore/pimcore
   - composer install
+  - php pimcore/cli/console.php
