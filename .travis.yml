@@ -9,7 +9,7 @@ services:
 before_script:
   - mysql -e 'CREATE DATABASE pimcore_test;'
   - git clone https://github.com/pimcore/pimcore.git pimcore/pimcore
+  - cp .travis/_composer.json pimcore/pimcore/composer.json
   - cd pimcore/pimcore
-  - cp ./.travis/_composer.json ./composer.json
   - composer install
   - php pimcore/cli/console.php
