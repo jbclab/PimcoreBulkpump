@@ -4,4 +4,4 @@ php:
   - '7.1'
 
 before_script:
-  - ./test.sh
+  - git clone git@github.com:pimcore/pimcore.git ./pimcore
