@@ -10,5 +10,6 @@ before_script:
   - mysql -e 'CREATE DATABASE pimcore_test;'
   - git clone https://github.com/pimcore/pimcore.git pimcore/pimcore
   - cd pimcore/pimcore
+  - cp ./.travis/_composer.json ./composer.json
   - composer install
   - php pimcore/cli/console.php
