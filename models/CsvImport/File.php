@@ -192,7 +192,7 @@ class CsvImport_File extends CsvImport_Abstract_Model {
             throw new Exception('Cant open : ' . $fullname);
         }
         $file = fopen($fullname, 'r');
-        while (($data = fgetcsv($file)) !== false) {
+        while (($data = fgetcsv($file, 0, ';')) !== false) {
             $i++;
             $return[] = $data;
             if ($n !== null && $i == $n) {
